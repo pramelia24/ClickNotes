@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Equilibrium Pro - Manajemen Tugas</title>
+    <!-- Menghubungkan file CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header>
+    <div class="app-title">Equilibrium Pro</div>
+    <div class="header-actions">
+        <button onclick="toggleTheme()" title="Ganti Tema">🌓</button>
+    </div>
+</header>
+
+<div class="container">
+
+    <!-- HALAMAN: DAFTAR TUGAS -->
+    <div id="view-home" class="view-section active">
+        <h2>Tugas Hari Ini & Mendatang</h2>
+        <div id="active-task-list" class="task-list">
+            <!-- Item tugas akan muncul di sini melalui JS -->
+        </div>
+        <div id="empty-state" class="empty-state-hidden">
+            <p>Tidak ada tugas aktif. Bagus!</p>
+        </div>
+    </div>
+
+    <!-- HALAMAN: TAMBAH TUGAS -->
+    <div id="view-add" class="view-section">
+        <h2>Tambah Tugas Baru</h2>
+        <div class="form-card">
+            <div class="form-group">
+                <label>Judul Tugas</label>
+                <input type="text" id="inp-title" placeholder="Contoh: Mengerjakan Laporan">
+            </div>
+            <div class="form-group">
+                <label>Deskripsi (Opsional)</label>
+                <textarea id="inp-desc" rows="2" placeholder="Detail tugas..."></textarea>
+            </div>
+            <div class="form-group flex-group">
+                <div class="flex-item">
+                    <label>Kategori</label>
+                    <select id="inp-cat">
+                        <option value="Pribadi">Pribadi</option>
+                        <option value="Pekerjaan">Pekerjaan</option>
+                        <option value="Belajar">Belajar</option>
+                        <option value="Lainnya">Lainnya</option>
+                    </select>
+                </div>
+                <div class="flex-item">
+                    <label>Prioritas</label>
+                    <select id="inp-prio">
+                        <option value="Urgent">Urgent 🔴</option>
+                        <option value="Penting">Penting 🟠</option>
+                        <option value="Biasa" selected>Biasa 🔵</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Deadline & Pengingat</label>
+                <input type="datetime-local" id="inp-date">
+            </div>
+            <div class="form-group">
+                <label>Frekuensi Pengingat</label>
+                <select id="inp-freq">
+                    <option value="once">Sekali Saja</option>
+                    <option value="daily">Setiap Hari (Berulang)</option>
+                    <option value="weekly">Setiap Minggu (Berulang)</option>
+                </select>
+            </div>
+            <button class="btn-primary" onclick="addNewTask()">Simpan Tugas</button>
+        </div>
+    </div>
+
+    <!-- HALAMAN: RIWAYAT -->
+    <div id="view-history" class="view-section">
+        <h2>Riwayat Penyelesaian</h2>
+        <button onclick="clearHistory()" class="btn-clear-history">Hapus Semua Riwayat</button>
+        <div id="history-task-list" class="task-list">
+            <!-- Riwayat akan muncul di sini -->
+        </div>
+    </div>
+
+    <!-- HALAMAN: PENGATURAN -->
+    <div id="view-settings" class="view-section">
+        <h2>Pengaturan</h2>
+        <div class="form-card">
+            <div class="settings-row">
+                <span>Notifikasi Suara</span>
+                <label class="switch">
+                    <input type="checkbox" id="set-sound" checked onchange="saveSettings()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="settings-row">
+                <span>Fitur Getar (Mobile)</span>
+                <label class="switch">
+                    <input type="checkbox" id="set-vibrate" checked onchange="saveSettings()">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            <div class="settings-row">
+                <span>Izin Notifikasi</span>
+                <button onclick="requestNotifPermission()" class="btn-small">Cek Izin</button>
+            </div>
+        </div>
+        <div class="version-text">
+            Equilibrium Pro v1.0
+        </div>
+    </div>
+
+</div>
+
+<!-- BOTTOM NAVIGATION -->
+<nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('view-home', this)">
+        <span>📋</span>Home
+    </button>
+    <button class="nav-item" onclick="switchTab('view-add', this)">
+        <span>➕</span>Tambah
+    </button>
+    <button class="nav-item" onclick="switchTab('view-history', this)">
+        <span>🕰️</span>Riwayat
+    </button>
+    <button class="nav-item" onclick="switchTab('view-settings', this)">
+        <span>⚙️</span>Setting
+    </button>
+</nav>
+
+<!-- Audio Element for Notification -->
+<audio id="notif-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
+
+<!-- Menghubungkan file JavaScript -->
+<script src="script.js"></script>
+
+</body>
+</html>
