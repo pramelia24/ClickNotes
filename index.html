@@ -291,3 +291,30 @@
 
 </body>
 </html>
+<div class="task-form">
+    <input type="text" id="inp-title" placeholder="Judul tugas">
+
+    <textarea id="inp-desc" placeholder="Deskripsi"></textarea>
+
+    <select id="inp-cat">
+        <option value="Umum">Umum</option>
+        <option value="Pekerjaan">Pekerjaan</option>
+        <option value="Sekolah">Sekolah</option>
+    </select>
+
+    <select id="inp-prio">
+        <option value="Biasa">Biasa</option>
+        <option value="Penting">Penting</option>
+        <option value="Urgent">Urgent</option>
+    </select>
+
+    <input type="datetime-local" id="inp-date">
+
+    <select id="inp-freq">
+        <option value="once">Sekali</option>
+        <option value="daily">Harian</option>
+        <option value="weekly">Mingguan</option>
+    </select>
+
+    <button onclick="addNewTask()">Simpan Tugas</button>
+</div>
