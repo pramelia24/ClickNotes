@@ -2,17 +2,55 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="theme-color" content="#3b82f6">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
     <title>Equilibrium Pro - Manajemen Tugas</title>
-    <!-- Menghubungkan file CSS -->
+    
+    <!-- 1. Menghubungkan CSS -->
     <link rel="stylesheet" href="style.css">
+
+    <!-- 2. Font Modern (Poppins) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- 3. Ikon Profesional (Google Material Icons) -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+
+    <style>
+        /* Override Font Bawaan agar pakai Poppins */
+        body, button, input, select, textarea {
+            font-family: 'Poppins', sans-serif !important;
+        }
+        /* Penyesuaian posisi ikon */
+        .material-icons-round {
+            font-size: 1.2rem;
+            vertical-align: middle;
+        }
+        .nav-item .material-icons-round {
+            font-size: 1.5rem;
+            margin-bottom: 4px;
+        }
+        /* Mencegah zoom paksa di HP saat input ditekan */
+        input, select, textarea {
+            font-size: 16px; 
+        }
+    </style>
 </head>
 <body>
 
 <header>
-    <div class="app-title">Equilibrium Pro</div>
+    <div class="app-title">
+        <span class="material-icons-round" style="color:var(--accent-color); margin-right:5px;">check_circle</span>
+        Equilibrium Pro
+    </div>
     <div class="header-actions">
-        <button onclick="toggleTheme()" title="Ganti Tema">🌓</button>
+        <button onclick="toggleTheme()" title="Ganti Tema">
+            <span class="material-icons-round">dark_mode</span>
+        </button>
     </div>
 </header>
 
@@ -25,7 +63,8 @@
             <!-- Item tugas akan muncul di sini melalui JS -->
         </div>
         <div id="empty-state" class="empty-state-hidden">
-            <p>Tidak ada tugas aktif. Bagus!</p>
+            <span class="material-icons-round" style="font-size: 3rem; color: #cbd5e1;">task_alt</span>
+            <p>Semua tugas selesai. Bagus!</p>
         </div>
     </div>
 
@@ -72,14 +111,18 @@
                     <option value="weekly">Setiap Minggu (Berulang)</option>
                 </select>
             </div>
-            <button class="btn-primary" onclick="addNewTask()">Simpan Tugas</button>
+            <button class="btn-primary" onclick="addNewTask()">
+                <span class="material-icons-round" style="font-size:1rem; margin-right:5px;">save</span> Simpan Tugas
+            </button>
         </div>
     </div>
 
     <!-- HALAMAN: RIWAYAT -->
     <div id="view-history" class="view-section">
         <h2>Riwayat Penyelesaian</h2>
-        <button onclick="clearHistory()" class="btn-clear-history">Hapus Semua Riwayat</button>
+        <button onclick="clearHistory()" class="btn-clear-history">
+            <span class="material-icons-round" style="font-size:1rem; vertical-align:middle;">delete_sweep</span> Hapus Semua Riwayat
+        </button>
         <div id="history-task-list" class="task-list">
             <!-- Riwayat akan muncul di sini -->
         </div>
@@ -90,52 +133,161 @@
         <h2>Pengaturan</h2>
         <div class="form-card">
             <div class="settings-row">
-                <span>Notifikasi Suara</span>
+                <span style="display:flex; align-items:center; gap:5px;">
+                    <span class="material-icons-round">volume_up</span> Notifikasi Suara
+                </span>
                 <label class="switch">
                     <input type="checkbox" id="set-sound" checked onchange="saveSettings()">
                     <span class="slider"></span>
                 </label>
             </div>
             <div class="settings-row">
-                <span>Fitur Getar (Mobile)</span>
+                <span style="display:flex; align-items:center; gap:5px;">
+                    <span class="material-icons-round">vibration</span> Fitur Getar
+                </span>
                 <label class="switch">
                     <input type="checkbox" id="set-vibrate" checked onchange="saveSettings()">
                     <span class="slider"></span>
                 </label>
             </div>
             <div class="settings-row">
-                <span>Izin Notifikasi</span>
+                <span style="display:flex; align-items:center; gap:5px;">
+                    <span class="material-icons-round">notifications_active</span> Izin Notifikasi
+                </span>
                 <button onclick="requestNotifPermission()" class="btn-small">Cek Izin</button>
             </div>
         </div>
         <div class="version-text">
-            Equilibrium Pro v1.0
+            Equilibrium Pro v1.1 <br> Developed for Productivity
         </div>
     </div>
 
 </div>
 
-<!-- BOTTOM NAVIGATION -->
+<!-- BOTTOM NAVIGATION (Diperbarui dengan Ikon) -->
 <nav class="bottom-nav">
     <button class="nav-item active" onclick="switchTab('view-home', this)">
-        <span>📋</span>Home
+        <span class="material-icons-round">dashboard</span>
+        Home
     </button>
     <button class="nav-item" onclick="switchTab('view-add', this)">
-        <span>➕</span>Tambah
+        <span class="material-icons-round">add_circle_outline</span>
+        Tambah
     </button>
     <button class="nav-item" onclick="switchTab('view-history', this)">
-        <span>🕰️</span>Riwayat
+        <span class="material-icons-round">history</span>
+        Riwayat
     </button>
     <button class="nav-item" onclick="switchTab('view-settings', this)">
-        <span>⚙️</span>Setting
+        <span class="material-icons-round">settings</span>
+        Setting
     </button>
 </nav>
 
 <!-- Audio Element for Notification -->
 <audio id="notif-sound" src="https://actions.google.com/sounds/v1/alarms/beep_short.ogg" preload="auto"></audio>
 
-<!-- Menghubungkan file JavaScript -->
+<!-- SCRIPT -->
 <script src="script.js"></script>
+
+<!-- Script Tambahan untuk mengganti Ikon di JavaScript yang masih merender emoji -->
+<script>
+    // Override fungsi renderTasks dari script.js agar menggunakan ikon, bukan emoji
+    // Kita menimpa fungsi renderTasks yang ada di script.js
+    const originalRenderTasks = renderTasks;
+    
+    renderTasks = function() {
+        const container = document.getElementById('active-task-list');
+        container.innerHTML = '';
+        
+        const activeTasks = tasks.filter(t => t.status === 'active');
+        
+        // Sort logic (sama seperti sebelumnya)
+        activeTasks.sort((a, b) => {
+            const prioScore = { 'Urgent': 3, 'Penting': 2, 'Biasa': 1 };
+            if (prioScore[b.priority] !== prioScore[a.priority]) {
+                return prioScore[b.priority] - prioScore[a.priority];
+            }
+            return new Date(a.deadline) - new Date(b.deadline);
+        });
+
+        const emptyState = document.getElementById('empty-state');
+        if(activeTasks.length === 0) {
+            emptyState.style.display = 'block';
+            return;
+        } else {
+            emptyState.style.display = 'none';
+        }
+
+        activeTasks.forEach(task => {
+            const deadline = new Date(task.deadline);
+            const isOverdue = new Date() > deadline;
+            const dateStr = deadline.toLocaleString('id-ID', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+
+            // Perubahan: Menggunakan material-icons-round pada tombol actions
+            const html = `
+                <div class="task-card prio-${task.priority}">
+                    <div class="task-content">
+                        <div class="task-header">
+                            <div class="task-title">${task.title}</div>
+                            <span class="task-badge">${task.category}</span>
+                        </div>
+                        <div class="task-desc">${task.desc}</div>
+                        <div class="task-meta">
+                            <span class="${isOverdue ? 'task-overdue' : ''}" style="display:flex; align-items:center; gap:4px;">
+                                <span class="material-icons-round" style="font-size:14px">schedule</span> ${dateStr}
+                            </span>
+                            ${task.frequency !== 'once' ? '<span style="display:flex; align-items:center; margin-left:8px; gap:4px;"><span class="material-icons-round" style="font-size:14px">repeat</span> ' + task.frequency + '</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-icon btn-check" onclick="completeTask(${task.id})" title="Selesai">
+                            <span class="material-icons-round">check_circle</span>
+                        </button>
+                        <button class="btn-icon btn-cal" onclick="addToCalendar(${task.id})" title="Simpan ke Kalender">
+                            <span class="material-icons-round">event</span>
+                        </button>
+                        <button class="btn-icon btn-trash" onclick="deleteTask(${task.id})" title="Hapus">
+                            <span class="material-icons-round">delete</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.innerHTML += html;
+        });
+    };
+
+    // Override fungsi renderHistory juga agar ikonnya konsisten
+    renderHistory = function() {
+        const container = document.getElementById('history-task-list');
+        container.innerHTML = '';
+        const historyTasks = tasks.filter(t => t.status === 'completed').reverse();
+
+        if(historyTasks.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:var(--text-secondary)">Belum ada riwayat.</p>';
+            return;
+        }
+
+        historyTasks.forEach(task => {
+            container.innerHTML += `
+                <div class="task-card history-item">
+                    <div class="task-content">
+                        <div class="task-title done">${task.title}</div>
+                        <div class="task-meta">Selesai: ${task.completedAt}</div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-icon btn-trash" onclick="deleteTask(${task.id})">
+                            <span class="material-icons-round">delete</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // Jalankan render ulang saat halaman dimuat untuk menerapkan perubahan ikon
+    renderTasks();
+</script>
 
 </body>
 </html>
