@@ -1,24 +1,34 @@
 // --- STATE MANAGEMENT ---
+// Mengambil data dari LocalStorage saat aplikasi dibuka
 let tasks = JSON.parse(localStorage.getItem('eq_tasks')) || [];
 let settings = JSON.parse(localStorage.getItem('eq_settings')) || { sound: true, vibrate: true, theme: 'light' };
 
 // --- INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
     applyTheme(settings.theme);
-    renderTasks();
+    renderTasks(); // Tampilkan tugas saat load
     requestNotifPermission();
     
-    // Timer untuk cek notifikasi setiap 10 detik
+    // Cek notifikasi setiap 10 detik
     setInterval(checkReminders, 10000);
 });
 
 // --- NAVIGATION ---
 function switchTab(viewId, btnEl) {
+    // Sembunyikan semua halaman
     document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+    // Tampilkan halaman yang dipilih
     document.getElementById(viewId).classList.add('active');
     
+    // Update tombol navigasi aktif
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-    if(btnEl) btnEl.classList.add('active');
+    if(btnEl) {
+        btnEl.classList.add('active');
+    } else {
+        // Jika dipanggil manual tanpa klik tombol (misal setelah save)
+        // Cari tombol yang sesuai logika ID
+        if(viewId === 'view-home') document.querySelector('.nav-item:nth-child(1)').classList.add('active');
+    }
 
     if(viewId === 'view-home') renderTasks();
     if(viewId === 'view-history') renderHistory();
@@ -47,8 +57,9 @@ function requestNotifPermission() {
     }
 }
 
-// --- CRUD TUGAS ---
+// --- FITUR UTAMA: TAMBAH TUGAS (CRUD) ---
 function addNewTask() {
+    // 1. Ambil nilai dari input HTML
     const title = document.getElementById('inp-title').value;
     const desc = document.getElementById('inp-desc').value;
     const cat = document.getElementById('inp-cat').value;
@@ -56,27 +67,42 @@ function addNewTask() {
     const date = document.getElementById('inp-date').value;
     const freq = document.getElementById('inp-freq').value;
 
-    if (!title || !date) {
-        alert("Mohon isi Judul dan Waktu Deadline!");
+    // 2. Validasi: Judul dan Tanggal Wajib Diisi
+    if (!title) {
+        showToast("Judul tugas tidak boleh kosong!", true);
+        return;
+    }
+    if (!date) {
+        showToast("Tentukan tanggal deadline!", true);
         return;
     }
 
+    // 3. Buat Objek Tugas Baru
     const newTask = {
-        id: Date.now(),
-        title, desc, category: cat, priority: prio,
-        deadline: date, frequency: freq,
+        id: Date.now(), // ID unik berdasarkan waktu
+        title: title,
+        desc: desc,
+        category: cat,
+        priority: prio,
+        deadline: date,
+        frequency: freq,
         status: 'active',
         notified: false
     };
 
+    // 4. Simpan ke Array dan LocalStorage
     tasks.push(newTask);
     saveData();
     
-    // Reset form & Redirect
+    // 5. Reset Form Input agar kosong kembali
     document.getElementById('inp-title').value = '';
     document.getElementById('inp-desc').value = '';
     document.getElementById('inp-date').value = '';
-    switchTab('view-home', document.querySelectorAll('.nav-item')[0]);
+
+    // 6. Pindah ke Halaman Home & Tampilkan Notifikasi
+    switchTab('view-home');
+    renderTasks(); // Pastikan daftar direfresh
+    showToast("Tugas berhasil disimpan!");
 }
 
 function completeTask(id) {
@@ -86,16 +112,13 @@ function completeTask(id) {
         
         // Logika Pengulangan (Frequency)
         if (task.frequency !== 'once') {
-            // Jika berulang, buat duplikat untuk jadwal berikutnya
             const nextDate = new Date(task.deadline);
             if (task.frequency === 'daily') nextDate.setDate(nextDate.getDate() + 1);
             if (task.frequency === 'weekly') nextDate.setDate(nextDate.getDate() + 7);
 
-            // Update tugas saat ini menjadi selesai
             task.status = 'completed';
             task.completedAt = new Date().toLocaleString();
             
-            // Buat tugas baru untuk periode berikutnya
             const nextTask = { ...task, id: Date.now(), deadline: nextDate.toISOString().slice(0,16), status: 'active', notified: false };
             tasks.push(nextTask);
         } else {
@@ -105,6 +128,7 @@ function completeTask(id) {
         
         saveData();
         renderTasks();
+        showToast("Tugas selesai! Masuk ke riwayat.");
     }
 }
 
@@ -114,6 +138,7 @@ function deleteTask(id) {
         saveData();
         renderTasks();
         renderHistory();
+        showToast("Tugas dihapus.");
     }
 }
 
@@ -122,6 +147,7 @@ function clearHistory() {
         tasks = tasks.filter(t => t.status !== 'completed');
         saveData();
         renderHistory();
+        showToast("Riwayat dibersihkan.");
     }
 }
 
@@ -129,14 +155,16 @@ function saveData() {
     localStorage.setItem('eq_tasks', JSON.stringify(tasks));
 }
 
-// --- RENDERING ---
+// --- RENDERING (MENAMPILKAN DATA) ---
 function renderTasks() {
     const container = document.getElementById('active-task-list');
+    if(!container) return;
+    
     container.innerHTML = '';
     
     const activeTasks = tasks.filter(t => t.status === 'active');
     
-    // Sort: Urgent first, then by date
+    // Urutkan: Urgent paling atas, lalu berdasarkan tanggal terdekat
     activeTasks.sort((a, b) => {
         const prioScore = { 'Urgent': 3, 'Penting': 2, 'Biasa': 1 };
         if (prioScore[b.priority] !== prioScore[a.priority]) {
@@ -147,43 +175,53 @@ function renderTasks() {
 
     const emptyState = document.getElementById('empty-state');
     if(activeTasks.length === 0) {
-        emptyState.style.display = 'block';
-        return;
+        if(emptyState) emptyState.style.display = 'block';
     } else {
-        emptyState.style.display = 'none';
+        if(emptyState) emptyState.style.display = 'none';
+        
+        activeTasks.forEach(task => {
+            const deadline = new Date(task.deadline);
+            const isOverdue = new Date() > deadline;
+            const dateStr = deadline.toLocaleString('id-ID', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
+
+            // Render HTML Tugas
+            const html = `
+                <div class="task-card prio-${task.priority}">
+                    <div class="task-content">
+                        <div class="task-header">
+                            <div class="task-title">${task.title}</div>
+                            <span class="task-badge">${task.category}</span>
+                        </div>
+                        <div class="task-desc">${task.desc}</div>
+                        <div class="task-meta">
+                            <span class="${isOverdue ? 'task-overdue' : ''}" style="display:flex; align-items:center; gap:4px;">
+                                <span class="material-icons-round" style="font-size:14px">schedule</span> ${dateStr}
+                            </span>
+                            ${task.frequency !== 'once' ? '<span style="display:flex; align-items:center; margin-left:8px; gap:4px;"><span class="material-icons-round" style="font-size:14px">repeat</span> ' + task.frequency + '</span>' : ''}
+                        </div>
+                    </div>
+                    <div class="task-actions">
+                        <button class="btn-icon btn-check" onclick="completeTask(${task.id})" title="Selesai">
+                            <span class="material-icons-round">check_circle</span>
+                        </button>
+                        <button class="btn-icon btn-cal" onclick="addToCalendar(${task.id})" title="Simpan ke Kalender">
+                            <span class="material-icons-round">event</span>
+                        </button>
+                        <button class="btn-icon btn-trash" onclick="deleteTask(${task.id})" title="Hapus">
+                            <span class="material-icons-round">delete</span>
+                        </button>
+                    </div>
+                </div>
+            `;
+            container.innerHTML += html;
+        });
     }
-
-    activeTasks.forEach(task => {
-        const deadline = new Date(task.deadline);
-        const isOverdue = new Date() > deadline;
-        const dateStr = deadline.toLocaleString('id-ID', { weekday:'short', day:'numeric', month:'short', hour:'2-digit', minute:'2-digit'});
-
-        const html = `
-            <div class="task-card prio-${task.priority}">
-                <div class="task-content">
-                    <div class="task-header">
-                        <div class="task-title">${task.title}</div>
-                        <span class="task-badge">${task.category}</span>
-                    </div>
-                    <div class="task-desc">${task.desc}</div>
-                    <div class="task-meta">
-                        <span class="${isOverdue ? 'task-overdue' : ''}">⏰ ${dateStr}</span>
-                        ${task.frequency !== 'once' ? '<span>🔁 ' + task.frequency + '</span>' : ''}
-                    </div>
-                </div>
-                <div class="task-actions">
-                    <button class="btn-icon btn-check" onclick="completeTask(${task.id})" title="Selesai">✅</button>
-                    <button class="btn-icon btn-cal" onclick="addToCalendar(${task.id})" title="Simpan ke Kalender">📅</button>
-                    <button class="btn-icon btn-trash" onclick="deleteTask(${task.id})" title="Hapus">🗑️</button>
-                </div>
-            </div>
-        `;
-        container.innerHTML += html;
-    });
 }
 
 function renderHistory() {
     const container = document.getElementById('history-task-list');
+    if(!container) return;
+    
     container.innerHTML = '';
     const historyTasks = tasks.filter(t => t.status === 'completed').reverse();
 
@@ -200,11 +238,32 @@ function renderHistory() {
                     <div class="task-meta">Selesai: ${task.completedAt}</div>
                 </div>
                 <div class="task-actions">
-                    <button class="btn-icon btn-trash" onclick="deleteTask(${task.id})">🗑️</button>
+                    <button class="btn-icon btn-trash" onclick="deleteTask(${task.id})">
+                        <span class="material-icons-round">delete</span>
+                    </button>
                 </div>
             </div>
         `;
     });
+}
+
+// --- HELPER: TOAST NOTIFICATION ---
+// Menampilkan pesan pop-up kecil di bawah layar
+function showToast(message, isError = false) {
+    // Cek apakah elemen toast sudah ada di HTML, jika tidak buat baru
+    let toastBox = document.getElementById('toast-box');
+    if (!toastBox) {
+        toastBox = document.createElement('div');
+        toastBox.id = 'toast-box';
+        document.body.appendChild(toastBox);
+    }
+
+    toastBox.innerText = message;
+    toastBox.style.backgroundColor = isError ? 'var(--danger-color)' : 'var(--text-primary)';
+    toastBox.className = 'show';
+
+    // Hilangkan setelah 3 detik
+    setTimeout(() => { toastBox.className = toastBox.className.replace('show', ''); }, 3000);
 }
 
 // --- NOTIFICATION SYSTEM ---
@@ -213,7 +272,6 @@ function checkReminders() {
     tasks.forEach(task => {
         if (task.status === 'active' && !task.notified) {
             const deadline = new Date(task.deadline);
-            // Notifikasi jika waktu sekarang melewati deadline
             if (now >= deadline) {
                 triggerNotification(task);
                 task.notified = true; 
@@ -225,62 +283,33 @@ function checkReminders() {
 }
 
 function triggerNotification(task) {
-    // 1. Push Notification
     if (Notification.permission === "granted") {
         new Notification(`Deadline: ${task.title}`, {
-            body: `Waktunya menyelesaikan tugas ${task.category}! (${task.priority})`,
+            body: `Waktunya menyelesaikan tugas ${task.category}!`,
             icon: '' 
         });
     }
-
-    // 2. Sound
     if (settings.sound) {
         const audio = document.getElementById('notif-sound');
-        audio.play().catch(e => console.log("Audio play blocked"));
+        if(audio) audio.play().catch(e => console.log("Audio play blocked"));
     }
-
-    // 3. Vibrate (Android)
     if (settings.vibrate && navigator.vibrate) {
         navigator.vibrate([200, 100, 200]);
     }
 }
 
-// --- CALENDAR SYNC (ICS EXPORT) ---
+// --- CALENDAR SYNC ---
 function addToCalendar(id) {
     const task = tasks.find(t => t.id === id);
     if(!task) return;
-
-    // Buat format tanggal ICS (YYYYMMDDTHHMMSS)
     const d = new Date(task.deadline);
     const formatICSDate = (date) => date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
-    
     const start = formatICSDate(d);
-    const end = formatICSDate(new Date(d.getTime() + 60*60*1000)); // Asumsi durasi 1 jam
-
-    const icsContent = 
-`BEGIN:VCALENDAR
-VERSION:2.0
-PRODID:-//Equilibrium Pro//Task Manager//ID
-BEGIN:VEVENT
-UID:${task.id}@equilibrium.app
-DTSTAMP:${formatICSDate(new Date())}
-DTSTART:${start}
-DTEND:${end}
-SUMMARY:${task.title}
-DESCRIPTION:${task.desc}
-CATEGORIES:${task.category}
-PRIORITY:${task.priority === 'Urgent' ? 1 : (task.priority === 'Penting' ? 5 : 9)}
-END:VEVENT
-END:VCALENDAR`;
-
-    // Download file
+    const end = formatICSDate(new Date(d.getTime() + 3600000));
+    const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nDTSTART:${start}\nDTEND:${end}\nSUMMARY:${task.title}\nDESCRIPTION:${task.desc}\nEND:VEVENT\nEND:VCALENDAR`;
     const blob = new Blob([icsContent], { type: 'text/calendar' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `Task-${task.title}.ics`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
+    a.href = url; a.download = `Task.ics`;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
